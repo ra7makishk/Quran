@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>برنامج متابعة حفظ القرآن</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="style.css"/>
+</head>
+<body>
+
+  <div class="wrapper">
+
+    <div class="title-bar">
+      <div class="deco-row top-deco">
+        <span class="bow">🎀</span>
+        <span class="sparkle">✨</span>
+        <span class="bow">🎀</span>
+        <span class="sparkle">✨</span>
+        <span class="bow">🎀</span>
+      </div>
+      <h1>🌸 برنامج متابعة حفظ القرآن الكريم 🌸</h1>
+      <p>سجّلي تقدمك يوماً بيوم بإذن الله 💕</p>
+      <div class="deco-row">
+        <span>🦋</span><span>🌷</span><span>💖</span><span>🌷</span><span>🦋</span>
+      </div>
+    </div>
+
+    <div class="stats-row" id="statsRow"></div>
+
+    <div class="progress-wrap">
+      <span class="progress-label" id="progressLabel">0%</span>
+      <div class="progress-bar">
+        <div class="progress-fill" id="progressFill"></div>
+      </div>
+    </div>
+
+    <div class="tabs" id="tabs"></div>
+
+    <div class="table-scroll">
+      <table id="mainTable">
+        <thead>
+          <tr>
+            <th>اليوم</th>
+            <th>🕌 الحفظ</th>
+            <th>📖 المراجعة القريبة</th>
+            <th>📚 المراجعة البعيدة</th>
+            <th>📝 المراجعة العامة</th>
+            <th>✏️ ملاحظات التجويد</th>
+            <th>⭐ تقييم التجويد</th>
+            <th>🎧 سماع الشيخ</th>
+
+          </tr>
+        </thead>
+        <tbody id="tableBody"></tbody>
+      </table>
+    </div>
+
+    <div class="bottom-deco">
+      <span>🎀</span><span>🌸</span><span>💝</span><span>🌸</span>
+      <span>🎀</span><span>🌸</span><span>💝</span><span>🌸</span><span>🎀</span>
+    </div>
+
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
