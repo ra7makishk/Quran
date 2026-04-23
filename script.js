@@ -61,17 +61,42 @@ const AHZAB = [
   'الحزب 60 — الأعلى : سبح اسم ربك الأعلى، الذي خلق فسوى',
 ];
 
-const PAGES = [
-  { label: '🌸 الأيام ١–١٠',  start: 1,  end: 10 },
-  { label: '💕 الأيام ١١–٢٠', start: 11, end: 20 },
-  { label: '🎀 الأيام ٢١–٣٠', start: 21, end: 30 }
+// الشهور الهجرية من ذو القعدة إلى آخر السنة (ذو الحجة)
+// ثم السنة التالية: محرم، صفر، ربيع الأول، ربيع الثاني، جمادى الأولى،
+// جمادى الثانية، رجب، شعبان، رمضان، شوال
+const MONTHS = [
+  { name: 'ذو القعدة',    emoji: '🌙', days: 30 },
+  { name: 'ذو الحجة',     emoji: '🕌', days: 30 },
+  { name: 'محرم',          emoji: '🌟', days: 30 },
+  { name: 'صفر',           emoji: '🌸', days: 29 },
+  { name: 'ربيع الأول',   emoji: '🌺', days: 30 },
+  { name: 'ربيع الثاني',  emoji: '🌷', days: 29 },
+  { name: 'جمادى الأولى', emoji: '💕', days: 30 },
+  { name: 'جمادى الثانية',emoji: '🎀', days: 29 },
+  { name: 'رجب',           emoji: '✨', days: 30 },
+  { name: 'شعبان',         emoji: '💫', days: 29 },
+  { name: 'رمضان',         emoji: '🌙', days: 30 },
+  { name: 'شوال',          emoji: '🎉', days: 29 },
 ];
 
-const TOTAL_DAYS    = 30;
-const STORAGE_KEY   = 'quran_tracker_v2';
+// الصفحات الثلاث داخل كل شهر
+function getPagesForMonth(totalDays) {
+  const pages = [];
+  // صفحة 1: أيام 1-10
+  pages.push({ label: '🌸 الأيام ١–١٠', start: 1, end: 10 });
+  // صفحة 2: أيام 11-20
+  pages.push({ label: '💕 الأيام ١١–٢٠', start: 11, end: 20 });
+  // صفحة 3: أيام 21-نهاية الشهر
+  const endLabel = totalDays === 30 ? '٣٠' : '٢٩';
+  pages.push({ label: `🎀 الأيام ٢١–${endLabel}`, start: 21, end: totalDays });
+  return pages;
+}
 
-let currentPage = 0;
-let data        = {};
+const STORAGE_KEY = 'quran_tracker_v3';
+
+let currentMonth = 0;
+let currentPage  = 0;
+let data         = {};
 
 // ── Storage ──────────────────────────────────────────────────────────────────
 function loadData() {
@@ -87,28 +112,51 @@ function saveData() {
   } catch (e) {}
 }
 
-function getVal(day, col) {
-  return data[`d${day}_${col}`] || '';
+// مفتاح البيانات يشمل الشهر واليوم
+function getVal(month, day, col) {
+  return data[`m${month}_d${day}_${col}`] || '';
 }
 
-function setVal(day, col, val) {
-  data[`d${day}_${col}`] = val;
+function setVal(month, day, col, val) {
+  data[`m${month}_d${day}_${col}`] = val;
   saveData();
   updateStats();
 }
 
-// ── Tabs ─────────────────────────────────────────────────────────────────────
-function renderTabs() {
+// ── Month Tabs ────────────────────────────────────────────────────────────────
+function renderMonthTabs() {
+  const container = document.getElementById('monthTabs');
+  container.innerHTML = '';
+
+  MONTHS.forEach((m, idx) => {
+    const btn = document.createElement('button');
+    btn.className = 'month-tab-btn' + (idx === currentMonth ? ' active' : '');
+    btn.innerHTML = `${m.emoji} ${m.name}`;
+    btn.addEventListener('click', () => {
+      currentMonth = idx;
+      currentPage  = 0;
+      renderMonthTabs();
+      renderPageTabs();
+      renderTable();
+    });
+    container.appendChild(btn);
+  });
+}
+
+// ── Page Tabs (الأيام 1-10 / 11-20 / 21-نهاية) ────────────────────────────
+function renderPageTabs() {
   const container = document.getElementById('tabs');
   container.innerHTML = '';
 
-  PAGES.forEach((page, idx) => {
+  const pages = getPagesForMonth(MONTHS[currentMonth].days);
+
+  pages.forEach((page, idx) => {
     const btn = document.createElement('button');
     btn.className = 'tab-btn' + (idx === currentPage ? ' active' : '');
     btn.textContent = page.label;
     btn.addEventListener('click', () => {
       currentPage = idx;
-      renderTabs();
+      renderPageTabs();
       renderTable();
     });
     container.appendChild(btn);
@@ -120,7 +168,8 @@ function renderTable() {
   const tbody = document.getElementById('tableBody');
   tbody.innerHTML = '';
 
-  const { start, end } = PAGES[currentPage];
+  const pages = getPagesForMonth(MONTHS[currentMonth].days);
+  const { start, end } = pages[currentPage];
 
   for (let day = start; day <= end; day++) {
     const tr = document.createElement('tr');
@@ -133,43 +182,43 @@ function renderTable() {
     tdDay.appendChild(circle);
     tr.appendChild(tdDay);
 
-    // الحفظ — textarea + done checkbox
+    // الحفظ
     const tdHafiz = document.createElement('td');
     tdHafiz.classList.add('td-wide');
-    tdHafiz.appendChild(makeFieldWithDone(day, 'hafiz', 'hafiz_done', 'textarea', 'اكتبي ما حفظتِه... 🌸'));
+    tdHafiz.appendChild(makeFieldWithDone(currentMonth, day, 'hafiz', 'hafiz_done', 'textarea', 'اكتبي ما حفظتِه... 🌸'));
     tr.appendChild(tdHafiz);
 
-    // المراجعة القريبة — checkbox only
+    // المراجعة القريبة
     const tdRevClose = document.createElement('td');
-    tdRevClose.appendChild(makeCheckbox(day, 'rev_close'));
+    tdRevClose.appendChild(makeCheckbox(currentMonth, day, 'rev_close'));
     tr.appendChild(tdRevClose);
 
-    // المراجعة البعيدة — hizb dropdown + done checkbox
+    // المراجعة البعيدة
     const tdRevFar = document.createElement('td');
     tdRevFar.classList.add('td-wide');
-    tdRevFar.appendChild(makeFieldWithDone(day, 'hizb', 'hizb_done', 'hizb', ''));
+    tdRevFar.appendChild(makeFieldWithDone(currentMonth, day, 'hizb', 'hizb_done', 'hizb', ''));
     tr.appendChild(tdRevFar);
 
-    // المراجعة العامة — textarea + done checkbox
+    // المراجعة العامة
     const tdRevGen = document.createElement('td');
     tdRevGen.classList.add('td-wide');
-    tdRevGen.appendChild(makeFieldWithDone(day, 'rev_gen', 'rev_gen_done', 'textarea', 'اكتبي ملاحظات المراجعة... 💕'));
+    tdRevGen.appendChild(makeFieldWithDone(currentMonth, day, 'rev_gen', 'rev_gen_done', 'textarea', 'اكتبي ملاحظات المراجعة... 💕'));
     tr.appendChild(tdRevGen);
 
-    // Notes — textarea + done checkbox
+    // ملاحظات التجويد
     const tdNotes = document.createElement('td');
     tdNotes.classList.add('td-notes');
-    tdNotes.appendChild(makeFieldWithDone(day, 'notes', 'notes_done', 'notes', 'اكتبي ملاحظات التجويد... ✏️'));
+    tdNotes.appendChild(makeFieldWithDone(currentMonth, day, 'notes', 'notes_done', 'notes', 'اكتبي ملاحظات التجويد... ✏️'));
     tr.appendChild(tdNotes);
 
     // Stars
     const tdStars = document.createElement('td');
-    tdStars.appendChild(makeStars(day, 'stars'));
+    tdStars.appendChild(makeStars(currentMonth, day, 'stars'));
     tr.appendChild(tdStars);
 
-    // Sheikh checkbox
+    // Sheikh
     const tdSheikh = document.createElement('td');
-    tdSheikh.appendChild(makeCheckbox(day, 'sheikh'));
+    tdSheikh.appendChild(makeCheckbox(currentMonth, day, 'sheikh'));
     tr.appendChild(tdSheikh);
 
     tbody.appendChild(tr);
@@ -177,18 +226,18 @@ function renderTable() {
 }
 
 // ── Checkbox ──────────────────────────────────────────────────────────────────
-function makeCheckbox(day, col) {
+function makeCheckbox(month, day, col) {
   const wrap = document.createElement('div');
   wrap.className = 'check-wrap';
 
   const box = document.createElement('div');
-  box.className = 'checkbox-custom' + (getVal(day, col) === '1' ? ' checked' : '');
-  box.textContent = getVal(day, col) === '1' ? '💗' : '';
+  box.className = 'checkbox-custom' + (getVal(month, day, col) === '1' ? ' checked' : '');
+  box.textContent = getVal(month, day, col) === '1' ? '💗' : '';
 
   box.addEventListener('click', () => {
     const checked = box.classList.toggle('checked');
     box.textContent = checked ? '💗' : '';
-    setVal(day, col, checked ? '1' : '');
+    setVal(month, day, col, checked ? '1' : '');
   });
 
   wrap.appendChild(box);
@@ -196,23 +245,20 @@ function makeCheckbox(day, col) {
 }
 
 // ── Stars ─────────────────────────────────────────────────────────────────────
-function makeStars(day, col) {
+function makeStars(month, day, col) {
   const wrap = document.createElement('div');
   wrap.className = 'star-rating';
 
-  const current = parseInt(getVal(day, col)) || 0;
+  const current = parseInt(getVal(month, day, col)) || 0;
 
   for (let i = 1; i <= 5; i++) {
     const star = document.createElement('span');
     star.className = 'star' + (i <= current ? ' filled' : '');
     star.textContent = '★';
     star.addEventListener('click', () => {
-      setVal(day, col, String(i));
-      // Re-render only the stars in this row
+      setVal(month, day, col, String(i));
       const allStars = wrap.querySelectorAll('.star');
-      allStars.forEach((s, idx) => {
-        s.classList.toggle('filled', idx < i);
-      });
+      allStars.forEach((s, idx) => s.classList.toggle('filled', idx < i));
     });
     wrap.appendChild(star);
   }
@@ -221,18 +267,17 @@ function makeStars(day, col) {
 }
 
 // ── Hizb Multi-Select ────────────────────────────────────────────────────────
-function makeHizbSelect(day, col) {
-  const saved    = getVal(day, col) ? JSON.parse(getVal(day, col)) : [];
-  const wrap     = document.createElement('div');
+function makeHizbSelect(month, day, col) {
+  const saved = getVal(month, day, col) ? JSON.parse(getVal(month, day, col)) : [];
+  const wrap  = document.createElement('div');
   wrap.className = 'hizb-wrap';
 
-  // Display button
   const btn = document.createElement('button');
-  btn.className   = 'hizb-btn';
-  btn.type        = 'button';
+  btn.className = 'hizb-btn';
+  btn.type = 'button';
 
   function updateBtnLabel() {
-    const current = getVal(day, col) ? JSON.parse(getVal(day, col)) : [];
+    const current = getVal(month, day, col) ? JSON.parse(getVal(month, day, col)) : [];
     if (current.length === 0) {
       btn.innerHTML = '<span class="hizb-placeholder">اختاري الحزب 🌸</span><span class="hizb-arrow">▼</span>';
     } else {
@@ -242,48 +287,45 @@ function makeHizbSelect(day, col) {
   }
   updateBtnLabel();
 
-  // Dropdown panel
-  const panel     = document.createElement('div');
+  const panel = document.createElement('div');
   panel.className = 'hizb-panel hidden';
 
-  // Search box
-  const search     = document.createElement('input');
-  search.type      = 'text';
+  const search = document.createElement('input');
+  search.type = 'text';
   search.className = 'hizb-search';
   search.placeholder = '🔍 ابحثي...';
   panel.appendChild(search);
 
-  // List
-  const list     = document.createElement('ul');
+  const list = document.createElement('ul');
   list.className = 'hizb-list';
 
   function buildList(filter = '') {
     list.innerHTML = '';
     AHZAB.forEach((hizb, idx) => {
       if (filter && !hizb.includes(filter)) return;
-      const current = getVal(day, col) ? JSON.parse(getVal(day, col)) : [];
-      const li      = document.createElement('li');
-      li.className  = 'hizb-item' + (current.includes(idx) ? ' selected' : '');
+      const current = getVal(month, day, col) ? JSON.parse(getVal(month, day, col)) : [];
+      const li = document.createElement('li');
+      li.className = 'hizb-item' + (current.includes(idx) ? ' selected' : '');
 
-      const chk     = document.createElement('span');
+      const chk = document.createElement('span');
       chk.className = 'hizb-chk';
       chk.textContent = current.includes(idx) ? '💗' : '○';
 
-      const lbl     = document.createElement('span');
+      const lbl = document.createElement('span');
       lbl.textContent = hizb;
 
       li.appendChild(chk);
       li.appendChild(lbl);
 
       li.addEventListener('click', () => {
-        let vals = getVal(day, col) ? JSON.parse(getVal(day, col)) : [];
+        let vals = getVal(month, day, col) ? JSON.parse(getVal(month, day, col)) : [];
         if (vals.includes(idx)) {
           vals = vals.filter(v => v !== idx);
         } else {
           vals.push(idx);
           vals.sort((a, b) => a - b);
         }
-        setVal(day, col, JSON.stringify(vals));
+        setVal(month, day, col, JSON.stringify(vals));
         buildList(search.value);
         updateBtnLabel();
       });
@@ -296,11 +338,9 @@ function makeHizbSelect(day, col) {
   search.addEventListener('input', () => buildList(search.value));
   panel.appendChild(list);
 
-  // Toggle
   btn.addEventListener('click', (e) => {
     e.stopPropagation();
     const isOpen = !panel.classList.contains('hidden');
-    // Close all other panels first
     document.querySelectorAll('.hizb-panel').forEach(p => p.classList.add('hidden'));
     if (!isOpen) panel.classList.remove('hidden');
   });
@@ -313,39 +353,43 @@ function makeHizbSelect(day, col) {
   return wrap;
 }
 
+// ── Auto-resize textarea ──────────────────────────────────────────────────────
+function autoResize(el) {
+  el.style.height = 'auto';
+  el.style.height = el.scrollHeight + 'px';
+}
+
 // ── Field + Done checkbox wrapper ────────────────────────────────────────────
-function makeFieldWithDone(day, fieldCol, doneCol, type, placeholder) {
+function makeFieldWithDone(month, day, fieldCol, doneCol, type, placeholder) {
   const wrap = document.createElement('div');
   wrap.className = 'field-done-wrap';
 
-  // the input/select/textarea
   let field;
   if (type === 'textarea') {
     field = document.createElement('textarea');
     field.className   = 'wide-textarea';
     field.placeholder = placeholder;
-    field.value       = getVal(day, fieldCol);
+    field.value       = getVal(month, day, fieldCol);
     field.rows        = 1;
-    field.addEventListener('input', () => { setVal(day, fieldCol, field.value); autoResize(field); });
+    field.addEventListener('input', () => { setVal(month, day, fieldCol, field.value); autoResize(field); });
     requestAnimationFrame(() => autoResize(field));
   } else if (type === 'notes') {
     field = document.createElement('textarea');
     field.className   = 'notes-textarea';
     field.placeholder = placeholder;
-    field.value       = getVal(day, fieldCol);
+    field.value       = getVal(month, day, fieldCol);
     field.rows        = 1;
-    field.addEventListener('input', () => { setVal(day, fieldCol, field.value); autoResize(field); });
+    field.addEventListener('input', () => { setVal(month, day, fieldCol, field.value); autoResize(field); });
     requestAnimationFrame(() => autoResize(field));
   } else if (type === 'hizb') {
-    field = makeHizbSelect(day, fieldCol);
+    field = makeHizbSelect(month, day, fieldCol);
   }
 
-  // done checkbox row
   const doneRow = document.createElement('div');
   doneRow.className = 'done-row';
 
   const doneBox = document.createElement('div');
-  const isDone  = getVal(day, doneCol) === '1';
+  const isDone  = getVal(month, day, doneCol) === '1';
   doneBox.className = 'done-check' + (isDone ? ' done' : '');
   doneBox.textContent = isDone ? '✓' : '';
   doneBox.title = 'اضغطي للتأكيد على الإتمام';
@@ -357,7 +401,7 @@ function makeFieldWithDone(day, fieldCol, doneCol, type, placeholder) {
   doneBox.addEventListener('click', () => {
     const nowDone = doneBox.classList.toggle('done');
     doneBox.textContent = nowDone ? '✓' : '';
-    setVal(day, doneCol, nowDone ? '1' : '');
+    setVal(month, day, doneCol, nowDone ? '1' : '');
   });
   doneLbl.addEventListener('click', () => doneBox.click());
 
@@ -369,36 +413,50 @@ function makeFieldWithDone(day, fieldCol, doneCol, type, placeholder) {
   return wrap;
 }
 
-
-
 // ── Stats ─────────────────────────────────────────────────────────────────────
 function updateStats() {
   let done = 0, total = 0, starsSum = 0, starsCount = 0;
 
-  for (let day = 1; day <= TOTAL_DAYS; day++) {
-    ['rev_close', 'rev_far', 'rev_gen', 'sheikh'].forEach(col => {
-      total++;
-      if (getVal(day, col) === '1') done++;
-    });
+  MONTHS.forEach((m, mIdx) => {
+    for (let day = 1; day <= m.days; day++) {
+      ['rev_close', 'sheikh'].forEach(col => {
+        total++;
+        if (getVal(mIdx, day, col) === '1') done++;
+      });
+      const s = parseInt(getVal(mIdx, day, 'stars'));
+      if (s > 0) { starsSum += s; starsCount++; }
+    }
+  });
 
-    const s = parseInt(getVal(day, 'stars'));
-    if (s > 0) { starsSum += s; starsCount++; }
-  }
-
-  const pct     = Math.round((done / total) * 100);
-  const avgStr  = starsCount > 0 ? (starsSum / starsCount).toFixed(1) : '—';
+  const pct    = total > 0 ? Math.round((done / total) * 100) : 0;
+  const avgStr = starsCount > 0 ? (starsSum / starsCount).toFixed(1) : '—';
 
   document.getElementById('progressFill').style.width  = pct + '%';
   document.getElementById('progressLabel').textContent = pct + '%';
 
+  // إحصائيات الشهر الحالي
+  let mDone = 0, mTotal = 0;
+  const m = MONTHS[currentMonth];
+  for (let day = 1; day <= m.days; day++) {
+    ['rev_close', 'sheikh'].forEach(col => {
+      mTotal++;
+      if (getVal(currentMonth, day, col) === '1') mDone++;
+    });
+  }
+  const mPct = mTotal > 0 ? Math.round((mDone / mTotal) * 100) : 0;
+
   document.getElementById('statsRow').innerHTML = `
     <div class="stat-card">
       <div class="stat-num">🌟 ${done}</div>
-      <div class="stat-lbl">تم إنجازه</div>
+      <div class="stat-lbl">إجمالي الإنجاز</div>
     </div>
     <div class="stat-card">
       <div class="stat-num">💖 ${pct}%</div>
-      <div class="stat-lbl">نسبة الإنجاز</div>
+      <div class="stat-lbl">نسبة السنة</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-num">📅 ${mPct}%</div>
+      <div class="stat-lbl">نسبة الشهر</div>
     </div>
     <div class="stat-card">
       <div class="stat-num">⭐ ${avgStr}</div>
@@ -407,14 +465,9 @@ function updateStats() {
   `;
 }
 
-// ── Auto-resize textarea ──────────────────────────────────────────────────────
-function autoResize(el) {
-  el.style.height = 'auto';
-  el.style.height = el.scrollHeight + 'px';
-}
-
 // ── Init ──────────────────────────────────────────────────────────────────────
 loadData();
-renderTabs();
+renderMonthTabs();
+renderPageTabs();
 renderTable();
 updateStats();
