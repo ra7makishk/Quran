@@ -523,3 +523,35 @@ tbody td {
 @media (max-width: 600px) {
   .month-tab-btn { padding: 6px 12px; font-size: 12px; }
 }
+
+/* ── Coffee Check (hafiz done) ───────────────────────────────────── */
+.done-check.coffee-check {
+  font-size: 15px;
+  color: #c9a96e;
+  border-color: #d4a96a;
+  background: #fff8f0;
+  width: 26px;
+  height: 26px;
+}
+
+.done-check.coffee-check:hover {
+  border-color: #b07d3a;
+  background: #fef0dc;
+  transform: scale(1.15);
+}
+
+.done-check.coffee-check.done {
+  background: linear-gradient(135deg, #7b4f2e, #c47d3a);
+  border-color: #7b4f2e;
+  color: var(--white);
+  box-shadow: 0 2px 8px rgba(123, 79, 46, 0.35);
+  animation: coffeeWobble 0.4s ease;
+}
+
+@keyframes coffeeWobble {
+  0%   { transform: rotate(0deg) scale(1); }
+  25%  { transform: rotate(-12deg) scale(1.2); }
+  50%  { transform: rotate(8deg) scale(1.15); }
+  75%  { transform: rotate(-5deg) scale(1.1); }
+  100% { transform: rotate(0deg) scale(1); }
+}
