@@ -388,11 +388,12 @@ function makeFieldWithDone(month, day, fieldCol, doneCol, type, placeholder) {
   const doneRow = document.createElement('div');
   doneRow.className = 'done-row';
 
+  const isHafiz = doneCol === 'hafiz_done';
   const doneBox = document.createElement('div');
   const isDone  = getVal(month, day, doneCol) === '1';
-  doneBox.className = 'done-check' + (isDone ? ' done' : '');
-  doneBox.textContent = isDone ? '✓' : '';
-  doneBox.title = 'اضغطي للتأكيد على الإتمام';
+  doneBox.className = 'done-check' + (isHafiz ? ' coffee-check' : '') + (isDone ? ' done' : '');
+  doneBox.textContent = isDone ? (isHafiz ? '☕' : '✓') : (isHafiz ? '🤍' : '');
+  doneBox.title = isHafiz ? 'كوباية قهوة لما تخلصي الحفظ ☕' : 'اضغطي للتأكيد على الإتمام';
 
   const doneLbl = document.createElement('span');
   doneLbl.className = 'done-lbl';
@@ -400,7 +401,7 @@ function makeFieldWithDone(month, day, fieldCol, doneCol, type, placeholder) {
 
   doneBox.addEventListener('click', () => {
     const nowDone = doneBox.classList.toggle('done');
-    doneBox.textContent = nowDone ? '✓' : '';
+    doneBox.textContent = nowDone ? (isHafiz ? '☕' : '✓') : (isHafiz ? '🤍' : '');
     setVal(month, day, doneCol, nowDone ? '1' : '');
   });
   doneLbl.addEventListener('click', () => doneBox.click());
