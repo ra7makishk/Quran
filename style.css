@@ -469,3 +469,57 @@ tbody td {
   .day-circle { width: 26px; height: 26px; font-size: 12px; }
   .done-lbl  { display: none; }
 }
+
+/* ── Month Tabs ──────────────────────────────────────────────────── */
+.month-tabs-wrap {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  margin-bottom: 0.75rem;
+  padding-bottom: 4px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--pink-header) var(--blush);
+}
+
+.month-tabs-wrap::-webkit-scrollbar { height: 4px; }
+.month-tabs-wrap::-webkit-scrollbar-track { background: var(--blush); border-radius: 4px; }
+.month-tabs-wrap::-webkit-scrollbar-thumb { background: var(--pink-header); border-radius: 4px; }
+
+.month-tabs {
+  display: flex;
+  gap: 6px;
+  flex-wrap: nowrap;
+  min-width: max-content;
+  justify-content: flex-start;
+  padding: 2px 2px;
+}
+
+.month-tab-btn {
+  padding: 8px 18px;
+  border-radius: 22px;
+  border: 1.5px solid var(--pink-header);
+  background: var(--white);
+  color: #993556;
+  font-family: 'Amiri', serif;
+  font-size: clamp(12px, 2.2vw, 14px);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.month-tab-btn:hover:not(.active) {
+  background: var(--blush);
+  transform: translateY(-1px);
+}
+
+.month-tab-btn.active {
+  background: linear-gradient(135deg, var(--pink-dark), var(--mauve));
+  color: var(--white);
+  border-color: var(--pink-dark);
+  box-shadow: 0 3px 12px rgba(212, 83, 126, 0.35);
+  font-weight: 700;
+}
+
+@media (max-width: 600px) {
+  .month-tab-btn { padding: 6px 12px; font-size: 12px; }
+}
