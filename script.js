@@ -325,15 +325,17 @@ function makeFieldWithDone(day, fieldCol, doneCol, type, placeholder) {
     field.className   = 'wide-textarea';
     field.placeholder = placeholder;
     field.value       = getVal(day, fieldCol);
-    field.rows        = 3;
-    field.addEventListener('input', () => setVal(day, fieldCol, field.value));
+    field.rows        = 1;
+    field.addEventListener('input', () => { setVal(day, fieldCol, field.value); autoResize(field); });
+    requestAnimationFrame(() => autoResize(field));
   } else if (type === 'notes') {
     field = document.createElement('textarea');
     field.className   = 'notes-textarea';
     field.placeholder = placeholder;
     field.value       = getVal(day, fieldCol);
-    field.rows        = 5;
-    field.addEventListener('input', () => setVal(day, fieldCol, field.value));
+    field.rows        = 1;
+    field.addEventListener('input', () => { setVal(day, fieldCol, field.value); autoResize(field); });
+    requestAnimationFrame(() => autoResize(field));
   } else if (type === 'hizb') {
     field = makeHizbSelect(day, fieldCol);
   }
@@ -403,6 +405,12 @@ function updateStats() {
       <div class="stat-lbl">متوسط التجويد</div>
     </div>
   `;
+}
+
+// ── Auto-resize textarea ──────────────────────────────────────────────────────
+function autoResize(el) {
+  el.style.height = 'auto';
+  el.style.height = el.scrollHeight + 'px';
 }
 
 // ── Init ──────────────────────────────────────────────────────────────────────
